@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Literata", Georgia, "Times New Roman", serif;
+  --font-arabic: "Amiri", "Scheherazade New", "Traditional Arabic", serif;
+  --font-sans: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --color-paper: #FAF8F5;
+  --color-surface: #FFFFFF;
+  --color-subtle: #F2EFE9;
+  --color-outline-hairline: #E6E1D8;
+  --color-ink: #1C1E21;
+  --color-ink-muted: #5A5F66;
+  --color-emerald-deep: #0F5C4D;
+  --color-emerald-darker: #004337;
+  --color-gold-warm: #B8860B;
+  --color-gold-tint: #FDF8EC;
+}
+
+@layer base {
+  html {
+    background-color: #FAF8F5;
+    color: #1C1E21;
+    font-family: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #FAF8F5;
+    color: #1C1E21;
+    min-height: 100vh;
+  }
+
+  h1, h2, .font-editorial {
+    font-family: "Literata", Georgia, serif;
+    text-wrap: balance;
+  }
+
+  button, a, input, select, textarea {
+    outline-color: #0F5C4D;
+  }
+
+  :focus-visible {
+    outline: 2px solid #0F5C4D;
+    outline-offset: 2px;
+  }
+}
+
+.font-arabic-verse {
+  font-family: "Amiri", "Scheherazade New", serif;
+  direction: rtl;
+  unicode-bidi: isolate;
+}
+
+.font-french-prose {
+  font-family: "Literata", Georgia, serif;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

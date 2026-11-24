@@ -1,0 +1,6 @@
+{
+  "name": "Le Noble Coran",
+  "description": "Application de lecture du Saint Coran en arabe et en français avec signets, reprise de lecture et récitation audio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
