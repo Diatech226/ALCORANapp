@@ -8,12 +8,15 @@ import {
   X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { Translations } from '../data/i18n';
 import { getSurahSummary, toArabicIndicDigits } from '../data/surahsIndex';
-import { BookmarkItem, ReadingProgress } from '../types/quran';
+import { AppLanguage, BookmarkItem, ReadingProgress } from '../types/quran';
 
 interface BookmarksScreenProps {
   bookmarks: BookmarkItem[];
   readingProgress: ReadingProgress;
+  language: AppLanguage;
+  t: Translations;
   onOpenAyah: (surahNumber: number, ayahNumber: number) => void;
   onRemoveBookmark: (id: string) => void;
   onUpdateNote: (item: Omit<BookmarkItem, 'id' | 'createdAt'>, note: string) => void;
@@ -22,9 +25,10 @@ interface BookmarksScreenProps {
 
 type BookmarkFilter = 'all' | 'with-notes';
 
-function formatFrenchDate(isoDate: string): string {
+function formatDateForLanguage(isoDate: string, language: AppLanguage): string {
+  const locale = language === 'ar' ? 'ar-SA' : 'fr-FR';
   try {
-    return new Intl.DateTimeFormat('fr-FR', {
+    return new Intl.DateTimeFormat(locale, {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -37,6 +41,8 @@ function formatFrenchDate(isoDate: string): string {
 export function BookmarksScreen({
   bookmarks,
   readingProgress,
+  language,
+  t,
   onOpenAyah,
   onRemoveBookmark,
   onUpdateNote,
@@ -95,31 +101,30 @@ export function BookmarksScreen({
     <main className="max-w-5xl mx-auto px-5 sm:px-6 pt-6 pb-24 md:pb-16">
       {/* Page Title */}
       <div className="mb-6">
-        <p className="md:hidden text-xs font-semibold text-[#0F5C4D] mb-1">
-          Vos repères personnels
+        <p className="md:hidden text-xs font-semibold text-[#0F5C4D] dark:text-[#5EC4A6] mb-1">
+          {t.navBookmarks}
         </p>
-        <h1 className="font-editorial text-[26px] sm:text-[28px] leading-9 font-semibold text-[#1C1E21]">
-          Signets et notes
+        <h1 className="font-editorial text-[26px] sm:text-[28px] leading-9 font-semibold text-[#1C1E21] dark:text-[#ECE9E2]">
+          {t.bookmarksTitle}
         </h1>
-        <p className="text-sm text-[#5A5F66] mt-1 tabular-nums">
-          {bookmarks.length} verset{bookmarks.length > 1 ? 's' : ''} enregistré
-          {bookmarks.length > 1 ? 's' : ''} · {notesCount} avec note personnelle
+        <p className="text-sm text-[#5A5F66] dark:text-[#A4ADA8] mt-1 tabular-nums">
+          {t.bookmarksSubtitle(bookmarks.length, notesCount)}
         </p>
       </div>
 
       {/* Reading Position Card */}
-      <section aria-label="Dernière position de lecture" className="mb-8">
-        <div className="bg-white border border-[#E6E1D8] rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <section aria-label={t.savedReadingPosition} className="mb-8">
+        <div className="bg-white dark:bg-[#1A201D] border border-[#E6E1D8] dark:border-[#2C3530] rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-[#0F5C4D]">
-              Position de lecture sauvegardée
+            <p className="text-xs font-semibold text-[#0F5C4D] dark:text-[#5EC4A6]">
+              {t.savedReadingPosition}
             </p>
-            <h2 className="font-editorial text-xl font-semibold text-[#1C1E21] mt-1">
+            <h2 className="font-editorial text-xl font-semibold text-[#1C1E21] dark:text-[#ECE9E2] mt-1">
               {progressSurah.number}. {progressSurah.transliteration} —{' '}
               {progressSurah.frenchTitle}
             </h2>
-            <p className="text-sm text-[#5A5F66] mt-0.5 tabular-nums">
-              Verset {readingProgress.ayahNumber} sur {progressSurah.ayahCount} · Juz{' '}
+            <p className="text-sm text-[#5A5F66] dark:text-[#A4ADA8] mt-0.5 tabular-nums">
+              {t.verseOf(readingProgress.ayahNumber, progressSurah.ayahCount)} · Juz{' '}
               {progressSurah.juz}
             </p>
           </div>
@@ -129,34 +134,35 @@ export function BookmarksScreen({
             onClick={() =>
               onOpenAyah(readingProgress.surahNumber, readingProgress.ayahNumber)
             }
-            className="min-h-[48px] px-5 py-2.5 bg-[#0F5C4D] hover:bg-[#004337] text-white text-sm font-semibold rounded-lg inline-flex items-center justify-center gap-2 transition-colors shrink-0 cursor-pointer"
+            className="min-h-[48px] px-5 py-2.5 bg-[#0F5C4D] hover:bg-[#004337] dark:hover:bg-[#14725F] text-white text-sm font-semibold rounded-lg inline-flex items-center justify-center gap-2 transition-colors shrink-0 cursor-pointer"
           >
-            <span>Reprendre à ce verset</span>
-            <ArrowRight className="w-4 h-4" />
+            <span>{t.resumeAtVerse}</span>
+            <ArrowRight className="w-4 h-4 rtl:rotate-180" />
           </button>
         </div>
       </section>
 
       {/* Search & Filter Controls */}
       {bookmarks.length > 0 && (
-        <section aria-label="Filtrer les signets" className="mb-6 space-y-3">
+        <section aria-label={t.searchBookmarksPlaceholder} className="mb-6 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 text-[#5A5F66] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Search className="w-4 h-4 text-[#5A5F66] dark:text-[#A4ADA8] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
-                type="search"
+                type="text"
+                inputMode="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher dans vos signets et notes..."
-                aria-label="Rechercher dans les signets"
-                className="w-full min-h-[44px] pl-10 pr-10 py-2 bg-[#F2EFE9] text-sm text-[#1C1E21] placeholder:text-[#5A5F66] rounded-lg border border-transparent focus:bg-white focus:border-[#0F5C4D] focus:outline-none transition-colors"
+                placeholder={t.searchBookmarksPlaceholder}
+                aria-label={t.searchBookmarksPlaceholder}
+                className="w-full min-h-[44px] pl-10 pr-10 py-2 bg-[#F2EFE9] dark:bg-[#232A26] text-sm text-[#1C1E21] dark:text-[#ECE9E2] placeholder:text-[#5A5F66] dark:placeholder:text-[#A4ADA8] rounded-lg border border-transparent focus:bg-white dark:focus:bg-[#1A201D] focus:border-[#0F5C4D] dark:focus:border-[#5EC4A6] focus:outline-none transition-colors"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
                   aria-label="Effacer la recherche"
-                  className="min-h-[44px] min-w-[44px] flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 text-[#5A5F66] cursor-pointer"
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 text-[#5A5F66] dark:text-[#A4ADA8] cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -165,8 +171,8 @@ export function BookmarksScreen({
 
             <div
               role="group"
-              aria-label="Filtrer les signets"
-              className="inline-flex items-center gap-1 p-1 bg-[#F2EFE9] rounded-lg self-start"
+              aria-label={t.navBookmarks}
+              className="inline-flex items-center gap-1 p-1 bg-[#F2EFE9] dark:bg-[#232A26] rounded-lg self-start"
             >
               <button
                 type="button"
@@ -174,10 +180,10 @@ export function BookmarksScreen({
                 className={`min-h-[36px] px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                   filterMode === 'all'
                     ? 'bg-[#0F5C4D] text-white'
-                    : 'text-[#5A5F66] hover:text-[#1C1E21]'
+                    : 'text-[#5A5F66] dark:text-[#A4ADA8] hover:text-[#1C1E21] dark:hover:text-[#ECE9E2]'
                 }`}
               >
-                Tous ({bookmarks.length})
+                {t.allBookmarks(bookmarks.length)}
               </button>
               <button
                 type="button"
@@ -185,10 +191,10 @@ export function BookmarksScreen({
                 className={`min-h-[36px] px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                   filterMode === 'with-notes'
                     ? 'bg-[#0F5C4D] text-white'
-                    : 'text-[#5A5F66] hover:text-[#1C1E21]'
+                    : 'text-[#5A5F66] dark:text-[#A4ADA8] hover:text-[#1C1E21] dark:hover:text-[#ECE9E2]'
                 }`}
               >
-                Avec notes ({notesCount})
+                {t.withNotesFilter(notesCount)}
               </button>
             </div>
           </div>
@@ -197,30 +203,29 @@ export function BookmarksScreen({
 
       {/* Bookmarks List or Empty State */}
       {bookmarks.length === 0 ? (
-        <div className="bg-white border border-[#E6E1D8] rounded-2xl p-10 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-[#FDF8EC] border border-[#B8860B]/25 text-[#B8860B] flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white dark:bg-[#1A201D] border border-[#E6E1D8] dark:border-[#2C3530] rounded-2xl p-10 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-[#FDF8EC] dark:bg-[#2A2518] border border-[#B8860B]/25 dark:border-[#E0AF3E]/30 text-[#B8860B] dark:text-[#E0AF3E] flex items-center justify-center mx-auto mb-4">
             <Bookmark className="w-5 h-5" />
           </div>
-          <h2 className="font-editorial text-xl font-semibold text-[#1C1E21]">
-            Aucun signet enregistré
+          <h2 className="font-editorial text-xl font-semibold text-[#1C1E21] dark:text-[#ECE9E2]">
+            {t.noBookmarksTitle}
           </h2>
-          <p className="text-sm text-[#5A5F66] max-w-md mx-auto mt-1.5">
-            Lors de votre lecture, touchez l’icône signet à côté d’un verset pour le retrouver
-            ici et y associer une note personnelle.
+          <p className="text-sm text-[#5A5F66] dark:text-[#A4ADA8] max-w-md mx-auto mt-1.5">
+            {t.noBookmarksHint}
           </p>
           <button
             type="button"
             onClick={onGoToSurahs}
-            className="mt-6 min-h-[48px] px-5 py-2.5 bg-[#0F5C4D] hover:bg-[#004337] text-white text-sm font-semibold rounded-lg inline-flex items-center gap-2 transition-colors cursor-pointer"
+            className="mt-6 min-h-[48px] px-5 py-2.5 bg-[#0F5C4D] hover:bg-[#004337] dark:hover:bg-[#14725F] text-white text-sm font-semibold rounded-lg inline-flex items-center gap-2 transition-colors cursor-pointer"
           >
             <BookOpen className="w-4 h-4" />
-            <span>Parcourir les sourates</span>
+            <span>{t.browseSurahs}</span>
           </button>
         </div>
       ) : filteredBookmarks.length === 0 ? (
-        <div className="bg-white border border-[#E6E1D8] rounded-2xl p-10 text-center">
-          <p className="font-editorial text-lg font-semibold text-[#1C1E21]">
-            Aucun signet ne correspond à ce filtre
+        <div className="bg-white dark:bg-[#1A201D] border border-[#E6E1D8] dark:border-[#2C3530] rounded-2xl p-10 text-center">
+          <p className="font-editorial text-lg font-semibold text-[#1C1E21] dark:text-[#ECE9E2]">
+            {t.noFilteredBookmarks}
           </p>
           <button
             type="button"
@@ -228,13 +233,13 @@ export function BookmarksScreen({
               setSearchQuery('');
               setFilterMode('all');
             }}
-            className="mt-4 min-h-[44px] px-4 py-2 text-sm font-semibold text-[#0F5C4D] border border-[#E6E1D8] rounded-lg cursor-pointer"
+            className="mt-4 min-h-[44px] px-4 py-2 text-sm font-semibold text-[#0F5C4D] dark:text-[#5EC4A6] border border-[#E6E1D8] dark:border-[#2C3530] rounded-lg cursor-pointer"
           >
-            Tout afficher
+            {t.showAll}
           </button>
         </div>
       ) : (
-        <section aria-label="Liste des signets" className="space-y-4">
+        <section aria-label={t.bookmarksTitle} className="space-y-4">
           {filteredBookmarks.map((b) => {
             const surah = getSurahSummary(b.surahNumber);
             const isEditing = editingId === b.id;
@@ -242,23 +247,23 @@ export function BookmarksScreen({
             return (
               <article
                 key={b.id}
-                className="bg-white border border-[#E6E1D8] rounded-2xl p-5 sm:p-6"
+                className="bg-white dark:bg-[#1A201D] border border-[#E6E1D8] dark:border-[#2C3530] rounded-2xl p-5 sm:p-6"
               >
                 {/* Bookmark Header */}
-                <div className="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-[#E6E1D8]">
+                <div className="flex flex-wrap items-start justify-between gap-3 pb-4 border-b border-[#E6E1D8] dark:border-[#2C3530]">
                   <div>
                     <button
                       type="button"
                       onClick={() => onOpenAyah(b.surahNumber, b.ayahNumber)}
                       className="text-left group cursor-pointer"
                     >
-                      <h3 className="font-editorial text-lg font-semibold text-[#1C1E21] group-hover:text-[#0F5C4D] transition-colors">
+                      <h3 className="font-editorial text-lg font-semibold text-[#1C1E21] dark:text-[#ECE9E2] group-hover:text-[#0F5C4D] dark:group-hover:text-[#5EC4A6] transition-colors">
                         {surah.number}. {surah.transliteration} — {surah.frenchTitle}
                       </h3>
                     </button>
-                    <p className="text-xs text-[#5A5F66] mt-0.5 tabular-nums">
-                      Verset {b.ayahNumber} · Juz {b.juz} · Enregistré le{' '}
-                      {formatFrenchDate(b.createdAt)}
+                    <p className="text-xs text-[#5A5F66] dark:text-[#A4ADA8] mt-0.5 tabular-nums">
+                      {t.verseLabel(b.ayahNumber)} · Juz {b.juz} ·{' '}
+                      {t.savedOn(formatDateForLanguage(b.createdAt, language))}
                     </p>
                   </div>
 
@@ -266,17 +271,17 @@ export function BookmarksScreen({
                     <button
                       type="button"
                       onClick={() => onOpenAyah(b.surahNumber, b.ayahNumber)}
-                      className="min-h-[44px] px-3 text-xs font-semibold text-[#0F5C4D] hover:bg-[#0F5C4D]/8 rounded-lg inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="min-h-[44px] px-3 text-xs font-semibold text-[#0F5C4D] dark:text-[#5EC4A6] hover:bg-[#0F5C4D]/8 dark:hover:bg-[#5EC4A6]/12 rounded-lg inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
-                      <span>Lire</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <span>{t.readAction}</span>
+                      <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
                     </button>
 
                     <button
                       type="button"
                       onClick={() => startEditing(b)}
-                      aria-label={`Modifier la note du verset ${b.surahNumber}:${b.ayahNumber}`}
-                      className="min-h-[44px] min-w-[40px] flex items-center justify-center text-[#5A5F66] hover:text-[#1C1E21] rounded-lg transition-colors cursor-pointer"
+                      aria-label={`${t.edit} ${b.surahNumber}:${b.ayahNumber}`}
+                      className="min-h-[44px] min-w-[40px] flex items-center justify-center text-[#5A5F66] dark:text-[#A4ADA8] hover:text-[#1C1E21] dark:hover:text-[#ECE9E2] rounded-lg transition-colors cursor-pointer"
                     >
                       <PenLine className="w-4 h-4" />
                     </button>
@@ -284,8 +289,8 @@ export function BookmarksScreen({
                     <button
                       type="button"
                       onClick={() => onRemoveBookmark(b.id)}
-                      aria-label={`Supprimer le signet ${b.surahNumber}:${b.ayahNumber}`}
-                      className="min-h-[44px] min-w-[40px] flex items-center justify-center text-[#5A5F66] hover:text-[#BA1A1A] rounded-lg transition-colors cursor-pointer"
+                      aria-label={`Supprimer ${b.surahNumber}:${b.ayahNumber}`}
+                      className="min-h-[44px] min-w-[40px] flex items-center justify-center text-[#5A5F66] dark:text-[#A4ADA8] hover:text-[#BA1A1A] dark:hover:text-[#FFB4AB] rounded-lg transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -297,59 +302,62 @@ export function BookmarksScreen({
                   <p
                     lang="ar"
                     dir="rtl"
-                    className="font-arabic-verse text-2xl leading-[44px] text-right text-[#1C1E21]"
+                    className="font-arabic-verse text-2xl leading-[44px] text-right text-[#1C1E21] dark:text-[#ECE9E2]"
                   >
                     {b.ar}{' '}
-                    <span className="text-[#B8860B] text-[0.85em] px-1 select-none">
+                    <span className="text-[#B8860B] dark:text-[#E0AF3E] text-[0.85em] px-1 select-none">
                       ﴿{toArabicIndicDigits(b.ayahNumber)}﴾
                     </span>
                   </p>
-                  <p className="font-french-prose text-base leading-[26px] text-[#1C1E21] mt-3">
+                  <p
+                    dir="ltr"
+                    className="font-french-prose text-base leading-[26px] text-[#1C1E21] dark:text-[#E2DFD7] dark:tracking-[0.005em] mt-3"
+                  >
                     {b.fr}
                   </p>
                 </div>
 
                 {/* Note Display or Inline Editor */}
                 {isEditing ? (
-                  <div className="mt-4 pt-4 border-t border-[#E6E1D8]">
+                  <div className="mt-4 pt-4 border-t border-[#E6E1D8] dark:border-[#2C3530]">
                     <label
                       htmlFor={`bm-note-${b.id}`}
-                      className="block text-xs font-semibold text-[#1C1E21] mb-2"
+                      className="block text-xs font-semibold text-[#1C1E21] dark:text-[#ECE9E2] mb-2"
                     >
-                      Note personnelle
+                      {t.personalNote}
                     </label>
                     <textarea
                       id={`bm-note-${b.id}`}
                       rows={3}
                       value={noteDraft}
                       onChange={(e) => setNoteDraft(e.target.value)}
-                      placeholder="Ajouter une réflexion personnelle..."
-                      className="w-full p-3 bg-[#FAF8F5] border border-[#E6E1D8] rounded-lg text-sm text-[#1C1E21] focus:border-[#0F5C4D] focus:outline-none"
+                      placeholder={t.notePlaceholder}
+                      className="font-french-prose w-full p-3 bg-[#FAF8F5] dark:bg-[#121614] border border-[#E6E1D8] dark:border-[#2C3530] rounded-lg text-sm text-[#1C1E21] dark:text-[#ECE9E2] placeholder:text-[#5A5F66] dark:placeholder:text-[#A4ADA8] focus:border-[#0F5C4D] dark:focus:border-[#5EC4A6] focus:outline-none"
                     />
                     <div className="mt-3 flex justify-end gap-2">
                       <button
                         type="button"
                         onClick={() => setEditingId(null)}
-                        className="min-h-[40px] px-4 py-1.5 text-xs font-semibold text-[#5A5F66] cursor-pointer"
+                        className="min-h-[40px] px-4 py-1.5 text-xs font-semibold text-[#5A5F66] dark:text-[#A4ADA8] cursor-pointer"
                       >
-                        Annuler
+                        {t.cancel}
                       </button>
                       <button
                         type="button"
                         onClick={() => saveEdit(b)}
-                        className="min-h-[40px] px-4 py-1.5 text-xs font-semibold bg-[#0F5C4D] hover:bg-[#004337] text-white rounded-lg cursor-pointer"
+                        className="min-h-[40px] px-4 py-1.5 text-xs font-semibold bg-[#0F5C4D] hover:bg-[#004337] dark:hover:bg-[#14725F] text-white rounded-lg cursor-pointer"
                       >
-                        Enregistrer
+                        {t.save}
                       </button>
                     </div>
                   </div>
                 ) : (
                   b.note && (
-                    <div className="mt-4 bg-[#F2EFE9]/75 rounded-xl px-4 py-3 text-sm text-[#1C1E21]">
-                      <span className="block text-xs font-semibold text-[#0F5C4D] mb-0.5">
-                        Note personnelle
+                    <div className="mt-4 bg-[#F2EFE9]/75 dark:bg-[#232A26] rounded-xl px-4 py-3 text-sm text-[#1C1E21] dark:text-[#ECE9E2]">
+                      <span className="block text-xs font-semibold text-[#0F5C4D] dark:text-[#5EC4A6] mb-0.5">
+                        {t.personalNote}
                       </span>
-                      <p className="leading-relaxed">{b.note}</p>
+                      <p className="font-french-prose leading-relaxed">{b.note}</p>
                     </div>
                   )
                 )}

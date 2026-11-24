@@ -1,4 +1,58 @@
-import { Reciter, SurahSummary } from '../types/quran';
+import { ArabicFontId, FontOption, LatinFontId, Reciter, SurahSummary } from '../types/quran';
+
+export const ARABIC_FONTS: FontOption<ArabicFontId>[] = [
+  {
+    id: 'amiri',
+    label: 'Amiri',
+    description: 'Naskh classique',
+    cssFamily: '"Amiri", serif',
+  },
+  {
+    id: 'scheherazade',
+    label: 'Scheherazade New',
+    description: 'Calligraphie SIL coranique',
+    cssFamily: '"Scheherazade New", serif',
+  },
+  {
+    id: 'noto-naskh',
+    label: 'Noto Naskh Arabic',
+    description: 'Naskh moderne net',
+    cssFamily: '"Noto Naskh Arabic", serif',
+  },
+  {
+    id: 'lateef',
+    label: 'Lateef',
+    description: 'Naskh épuré',
+    cssFamily: '"Lateef", serif',
+  },
+];
+
+export const LATIN_FONTS: FontOption<LatinFontId>[] = [
+  {
+    id: 'literata',
+    label: 'Literata',
+    description: 'Sérif éditorial (FR & Fulfulde)',
+    cssFamily: '"Literata", Georgia, serif',
+  },
+  {
+    id: 'noto-serif',
+    label: 'Noto Serif',
+    description: 'Sérif universel (ɓ, ɗ, ƴ, ŋ)',
+    cssFamily: '"Noto Serif", Georgia, serif',
+  },
+  {
+    id: 'noto-sans',
+    label: 'Noto Sans',
+    description: 'Linéale claire (ɓ, ɗ, ƴ, ŋ)',
+    cssFamily: '"Noto Sans", system-ui, sans-serif',
+  },
+  {
+    id: 'andika',
+    label: 'Andika',
+    description: 'SIL lecture & Fulfulde (ɓ, ɗ, ƴ, ŋ)',
+    cssFamily: '"Andika", system-ui, sans-serif',
+  },
+];
 
 export const RECITERS: Reciter[] = [
   {

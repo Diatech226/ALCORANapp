@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BookmarksScreen } from './components/BookmarksScreen';
+import { LanguageSetupScreen } from './components/LanguageSetupScreen';
 import { AudioTrackState, MiniAudioPlayer } from './components/MiniAudioPlayer';
 import { SurahListScreen } from './components/SurahListScreen';
 import { SurahReaderScreen } from './components/SurahReaderScreen';
 import { TopNav } from './components/TopNav';
+import { getTranslations } from './data/i18n';
 import { useQuranStore } from './hooks/useQuranStore';
 import { fetchSurahDetail, getAudioUrls } from './services/quranService';
 import { Ayah, ScreenId } from './types/quran';
 
 export default function App() {
   const {
+    hasSelectedLanguage,
     bookmarks,
     readingProgress,
     settings,
@@ -20,6 +23,7 @@ export default function App() {
     removeBookmark,
     updateProgress,
     updateSettings,
+    completeLanguageOnboarding,
   } = useQuranStore();
 
   // Initial screen is always Screen 1: Liste des Sourates
@@ -34,6 +38,8 @@ export default function App() {
   const audioTrackRef = useRef<AudioTrackState | null>(null);
   const reciterRef = useRef<string>(settings.reciterId);
   const fallbackUrlRef = useRef<string | null>(null);
+
+  const t = getTranslations(settings.language);
 
   useEffect(() => {
     audioTrackRef.current = audioTrack;
@@ -273,19 +279,39 @@ export default function App() {
     setTargetAyahNumber(null);
   }, []);
 
+  if (!hasSelectedLanguage) {
+    return (
+      <LanguageSetupScreen
+        initialLanguage={settings.language}
+        onConfirmLanguage={completeLanguageOnboarding}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-[#1C1E21]">
+    <div
+      dir={settings.language === 'ar' ? 'rtl' : 'ltr'}
+      className="min-h-screen bg-[#FAF8F5] dark:bg-[#121614] text-[#1C1E21] dark:text-[#ECE9E2] transition-colors"
+    >
       <TopNav
         activeScreen={activeScreen}
         onNavigate={handleNavigate}
         onResumeReading={handleResumeReading}
         bookmarkCount={bookmarks.length}
+        t={t}
       />
 
       {activeScreen === 'surahs' && (
         <SurahListScreen
           readingProgress={readingProgress}
           bookmarks={bookmarks}
+          theme={settings.theme}
+          language={settings.language}
+          t={t}
+          onToggleTheme={() =>
+            updateSettings({ theme: settings.theme === 'dark' ? 'light' : 'dark' })
+          }
+          onChangeLanguage={(lang) => updateSettings({ language: lang })}
           onSelectSurah={handleOpenSurah}
         />
       )}
@@ -297,6 +323,7 @@ export default function App() {
           settings={settings}
           readingProgress={readingProgress}
           audioTrack={audioTrack}
+          t={t}
           isBookmarked={isBookmarked}
           getBookmark={getBookmark}
           onBackToList={() => handleNavigate('surahs')}
@@ -315,6 +342,8 @@ export default function App() {
         <BookmarksScreen
           bookmarks={bookmarks}
           readingProgress={readingProgress}
+          language={settings.language}
+          t={t}
           onOpenAyah={handleOpenSurah}
           onRemoveBookmark={removeBookmark}
           onUpdateNote={saveBookmarkNote}
@@ -326,6 +355,7 @@ export default function App() {
         <MiniAudioPlayer
           track={audioTrack}
           reciterId={settings.reciterId}
+          t={t}
           onTogglePlay={handleToggleAudioPlay}
           onPrevAyah={handlePrevAyah}
           onNextAyah={handleNextAyah}

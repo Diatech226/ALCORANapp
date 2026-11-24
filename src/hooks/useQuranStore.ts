@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { RECITERS } from '../data/surahsIndex';
+import { ARABIC_FONTS, LATIN_FONTS, RECITERS } from '../data/surahsIndex';
 import { fetchSurahDetail } from '../services/quranService';
-import { BookmarkItem, ReaderSettings, ReadingProgress } from '../types/quran';
+import { AppLanguage, BookmarkItem, ReaderSettings, ReadingProgress } from '../types/quran';
 
 const STORAGE_KEYS = {
   bookmarks: 'quran_fr_bookmarks_v1',
   seeded: 'quran_fr_bookmarks_seeded_v1',
   progress: 'quran_fr_progress_v1',
   settings: 'quran_fr_settings_v1',
+  langOnboarded: 'quran_fr_lang_onboarded_v1',
 };
 
 const DEFAULT_PROGRESS: ReadingProgress = {
@@ -20,6 +21,10 @@ const DEFAULT_SETTINGS: ReaderSettings = {
   showFrench: true,
   arabicSize: 'comfortable',
   reciterId: 'ar.alafasy',
+  theme: 'light',
+  arabicFont: 'amiri',
+  latinFont: 'literata',
+  language: 'fr',
 };
 
 function safeReadJson<T>(key: string, fallback: T): T {
@@ -33,6 +38,13 @@ function safeReadJson<T>(key: string, fallback: T): T {
 }
 
 export function useQuranStore() {
+  const [hasSelectedLanguage, setHasSelectedLanguage] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEYS.langOnboarded) === '1';
+    } catch {
+      return false;
+    }
+  });
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>(() =>
     safeReadJson<BookmarkItem[]>(STORAGE_KEYS.bookmarks, [])
   );
@@ -42,7 +54,22 @@ export function useQuranStore() {
   const [settings, setSettings] = useState<ReaderSettings>(() => {
     const stored = safeReadJson<ReaderSettings>(STORAGE_KEYS.settings, DEFAULT_SETTINGS);
     const validReciter = RECITERS.some((r) => r.id === stored.reciterId);
-    return validReciter ? stored : { ...stored, reciterId: DEFAULT_SETTINGS.reciterId };
+    const validTheme = stored.theme === 'dark' || stored.theme === 'light' ? stored.theme : 'light';
+    const validArabicFont = ARABIC_FONTS.some((f) => f.id === stored.arabicFont);
+    const validLatinFont = LATIN_FONTS.some((f) => f.id === stored.latinFont);
+    const validLanguage =
+      stored.language === 'fr' || stored.language === 'ff' || stored.language === 'ar'
+        ? stored.language
+        : DEFAULT_SETTINGS.language;
+    return {
+      ...DEFAULT_SETTINGS,
+      ...stored,
+      reciterId: validReciter ? stored.reciterId : DEFAULT_SETTINGS.reciterId,
+      theme: validTheme,
+      arabicFont: validArabicFont ? stored.arabicFont : DEFAULT_SETTINGS.arabicFont,
+      latinFont: validLatinFont ? stored.latinFont : DEFAULT_SETTINGS.latinFont,
+      language: validLanguage,
+    };
   });
 
   useEffect(() => {
@@ -62,6 +89,20 @@ export function useQuranStore() {
   }, [readingProgress]);
 
   useEffect(() => {
+    document.documentElement.classList.toggle('dark', settings.theme === 'dark');
+    const arabicFontOption =
+      ARABIC_FONTS.find((f) => f.id === settings.arabicFont) ?? ARABIC_FONTS[0];
+    const latinFontOption =
+      LATIN_FONTS.find((f) => f.id === settings.latinFont) ?? LATIN_FONTS[0];
+    document.documentElement.style.setProperty(
+      '--reader-arabic-font',
+      arabicFontOption.cssFamily
+    );
+    document.documentElement.style.setProperty(
+      '--reader-latin-font',
+      latinFontOption.cssFamily
+    );
+
     try {
       localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(settings));
     } catch {
@@ -227,7 +268,22 @@ export function useQuranStore() {
     setSettings((prev) => ({ ...prev, ...partial }));
   }, []);
 
+  const completeLanguageOnboarding = useCallback((language: AppLanguage) => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.langOnboarded, '1');
+    } catch {
+      // Ignore storage errors
+    }
+    setSettings((prev) => ({
+      ...prev,
+      language,
+      latinFont: language === 'ff' && prev.latinFont === 'literata' ? 'andika' : prev.latinFont,
+    }));
+    setHasSelectedLanguage(true);
+  }, []);
+
   return {
+    hasSelectedLanguage,
     bookmarks,
     readingProgress,
     settings,
@@ -238,5 +294,6 @@ export function useQuranStore() {
     removeBookmark,
     updateProgress,
     updateSettings,
+    completeLanguageOnboarding,
   };
 }

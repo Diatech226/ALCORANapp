@@ -55,11 +55,26 @@ export interface ReadingProgress {
 }
 
 export type ArabicSizeOption = 'compact' | 'comfortable' | 'large';
+export type ThemeMode = 'light' | 'dark';
+export type ArabicFontId = 'amiri' | 'scheherazade' | 'noto-naskh' | 'lateef';
+export type LatinFontId = 'literata' | 'noto-serif' | 'noto-sans' | 'andika';
+export type AppLanguage = 'fr' | 'ff' | 'ar';
+
+export interface FontOption<T extends string = string> {
+  id: T;
+  label: string;
+  description: string;
+  cssFamily: string;
+}
 
 export interface ReaderSettings {
   showFrench: boolean;
   arabicSize: ArabicSizeOption;
   reciterId: string;
+  theme: ThemeMode;
+  arabicFont: ArabicFontId;
+  latinFont: LatinFontId;
+  language: AppLanguage;
 }
 
 export interface Reciter {
